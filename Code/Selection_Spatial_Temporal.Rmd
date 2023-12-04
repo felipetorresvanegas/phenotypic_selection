@@ -1,0 +1,338 @@
+---
+title: "Spatial and Temporal Variation in Phenotypic Selection on Floral Traits"
+---
+
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(readr)
+library(writexl)
+library(reshape2)
+library(lme4)
+library(performance)
+```
+
+# Load Data: Floral Traits and Plant Reproductive Success
+
+## Knivsåsen 2021
+
+```{r}
+data_phenotypes_knivsasen_2021 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Knivsasen_2021.rds")))
+```
+
+```{r}
+data_phenotypes_knivsasen_2021 <- data_phenotypes_knivsasen_2021 %>% 
+  mutate(Treatment = "Open_Control") %>% 
+  mutate(Block = "NA")
+```
+
+## Knivsåsen 2022
+
+```{r}
+data_phenotypes_knivsasen_2022 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Knivsasen_2022.rds")))
+```
+
+```{r}
+data_phenotypes_knivsasen_2022 <- data_phenotypes_knivsasen_2022 %>% 
+  mutate(Treatment = "Open_Control") %>% 
+  mutate(Block = "NA")
+```
+
+## Veberöd 2022
+
+```{r}
+data_phenotypes_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Veberod_2022.rds")))
+```
+
+```{r}
+data_phenotypes_veberod_2022 <- data_phenotypes_veberod_2022 %>% 
+  filter(Treatment == "Open_Control")
+```
+
+# Merge Data Across Populations and Years
+
+```{r}
+data_phenotypes <- bind_rows(data_phenotypes_knivsasen_2021 %>% 
+                               dplyr::select(Population,
+                                             Plant_ID,
+                                             Treatment,
+                                             Stem_Height_Mean_Centred,
+                                             Corolla_Diameter_Mean_Centred,
+                                             Tube_Width_Mean_Centred,
+                                             Tube_Length_Mean_Centred,
+                                             NSD_Mean_Centred,
+                                             Stickidium_Mean_Centred,
+                                             Total_Flowers_Mean_Centred,
+                                             Total_Fruits,
+                                             Mean_Seeds_Weight,
+                                             Fruit_Yield_Total_Fruits,
+                                             Relative_Fruit_Yield_Total_Fruits) %>% 
+                               mutate(Year = as.character(2021)),
+                             data_phenotypes_knivsasen_2022 %>% 
+                               dplyr::select(Population,
+                                             Plant_ID,
+                                             Treatment,
+                                             Stem_Height_Mean_Centred,
+                                             Corolla_Diameter_Mean_Centred,
+                                             Tube_Width_Mean_Centred,
+                                             Tube_Length_Mean_Centred,
+                                             NSD_Mean_Centred,
+                                             Stickidium_Mean_Centred,
+                                             Total_Flowers_Mean_Centred,
+                                             Total_Fruits,
+                                             Mean_Seeds_Weight,
+                                             Fruit_Yield_Total_Fruits,
+                                             Relative_Fruit_Yield_Total_Fruits) %>% 
+                               mutate(Year = as.character(2022)),
+                             data_phenotypes_veberod_2022 %>% 
+                               dplyr::select(Population,
+                                             Plant_ID,
+                                             Treatment,
+                                             Stem_Height_Mean_Centred,
+                                             Corolla_Diameter_Mean_Centred,
+                                             Tube_Width_Mean_Centred,
+                                             Tube_Length_Mean_Centred,
+                                             NSD_Mean_Centred,
+                                             Stickidium_Mean_Centred,
+                                             Total_Flowers_Mean_Centred,
+                                             Total_Fruits,
+                                             Mean_Seeds_Weight,
+                                             Fruit_Yield_Total_Fruits,
+                                             Relative_Fruit_Yield_Total_Fruits) %>% 
+                               mutate(Year = as.character(2022)))
+```
+
+```{r}
+data_phenotypes <- data_phenotypes %>% 
+  mutate(Population_Year = paste(Population, Year, sep = "_")) %>% 
+  mutate(Plant_ID_Year = paste(Plant_ID, Year, sep = "_"))
+```
+
+# Spatial and Temporal Variation in Phenotypic Selection on Floral Traits
+
+## Knivsåsen 2021 vs. Knivsåsen 2022
+
+```{r}
+data_selection_gradients_K21_K22_ancova <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                       Stem_Height_Mean_Centred +
+                                                       Corolla_Diameter_Mean_Centred +
+                                                       Tube_Width_Mean_Centred +
+                                                       Tube_Length_Mean_Centred +
+                                                       NSD_Mean_Centred +
+                                                       Stickidium_Mean_Centred +
+                                                       Total_Flowers_Mean_Centred +
+                                                       Year +
+                                                       Stem_Height_Mean_Centred:Year +
+                                                       Corolla_Diameter_Mean_Centred:Year +
+                                                       Tube_Width_Mean_Centred:Year +
+                                                       Tube_Length_Mean_Centred:Year +
+                                                       NSD_Mean_Centred:Year +
+                                                       Stickidium_Mean_Centred:Year +
+                                                       Total_Flowers_Mean_Centred:Year,
+                                                     random = ~ 1 | Plant_ID_Year,
+                                                     na.action = na.omit,
+                                                     data = data_phenotypes %>%
+                                                       filter(Population_Year %in% c("Knivsasen_2021", "Knivsasen_2022")))
+```
+
+```{r}
+data_selection_gradients_K21_K22 <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                            Stem_Height_Mean_Centred +
+                                                            Corolla_Diameter_Mean_Centred +
+                                                            Tube_Width_Mean_Centred +
+                                                            Tube_Length_Mean_Centred +
+                                                            NSD_Mean_Centred +
+                                                            Stickidium_Mean_Centred +
+                                                            Total_Flowers_Mean_Centred,
+                                                          random = ~ 1 | Plant_ID_Year,
+                                                          na.action = na.omit,
+                                                          data = data_phenotypes %>%
+                                                            filter(Population_Year %in% c("Knivsasen_2021", "Knivsasen_2022")))
+```
+
+```{r}
+test_temporal_variation <- compare_performance(data_selection_gradients_K21_K22, data_selection_gradients_K21_K22_ancova)
+```
+
+## Knivsåsen 2022 vs. Veberöd 2022
+
+```{r}
+data_selection_gradients_K22_V22_ancova <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                       Stem_Height_Mean_Centred +
+                                                       Corolla_Diameter_Mean_Centred +
+                                                       Tube_Width_Mean_Centred +
+                                                       Tube_Length_Mean_Centred +
+                                                       NSD_Mean_Centred +
+                                                       Stickidium_Mean_Centred +
+                                                       Total_Flowers_Mean_Centred +
+                                                       Population +
+                                                       Stem_Height_Mean_Centred:Population +
+                                                       Corolla_Diameter_Mean_Centred:Population +
+                                                       Tube_Width_Mean_Centred:Population +
+                                                       Tube_Length_Mean_Centred:Population +
+                                                       NSD_Mean_Centred:Population +
+                                                       Stickidium_Mean_Centred:Population +
+                                                       Total_Flowers_Mean_Centred:Population,
+                                                     random = ~ 1 | Plant_ID,
+                                                     na.action = na.omit,
+                                                     data = data_phenotypes %>%
+                                                       filter(Population_Year %in% c("Knivsasen_2022", "Veberod_2022")))
+```
+
+```{r}
+data_selection_gradients_K22_V22 <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                            Stem_Height_Mean_Centred +
+                                                            Corolla_Diameter_Mean_Centred +
+                                                            Tube_Width_Mean_Centred +
+                                                            Tube_Length_Mean_Centred +
+                                                            NSD_Mean_Centred +
+                                                            Stickidium_Mean_Centred +
+                                                            Total_Flowers_Mean_Centred,
+                                                          random = ~ 1 | Plant_ID,
+                                                          na.action = na.omit,
+                                                          data = data_phenotypes %>%
+                                                            filter(Population_Year %in% c("Knivsasen_2022", "Veberod_2022")))
+```
+
+```{r warning=FALSE}
+test_spatial_variation <- compare_performance(data_selection_gradients_K22_V22, data_selection_gradients_K22_V22_ancova)
+```
+
+## Knivsåsen 2021 vs. Veberöd 2022
+
+```{r}
+data_selection_gradients_K21_V22_ancova <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                       Stem_Height_Mean_Centred +
+                                                       Corolla_Diameter_Mean_Centred +
+                                                       Tube_Width_Mean_Centred +
+                                                       Tube_Length_Mean_Centred +
+                                                       NSD_Mean_Centred +
+                                                       Stickidium_Mean_Centred +
+                                                       Total_Flowers_Mean_Centred +
+                                                       Population +
+                                                       Stem_Height_Mean_Centred:Population +
+                                                       Corolla_Diameter_Mean_Centred:Population +
+                                                       Tube_Width_Mean_Centred:Population +
+                                                       Tube_Length_Mean_Centred:Population +
+                                                       NSD_Mean_Centred:Population +
+                                                       Stickidium_Mean_Centred:Population +
+                                                       Total_Flowers_Mean_Centred:Population,
+                                                     random = ~ 1 | Plant_ID,
+                                                     na.action = na.omit,
+                                                     data = data_phenotypes %>% 
+                                                       filter(Population_Year %in% c("Knivsasen_2021", "Veberod_2022")))
+```
+
+```{r}
+data_selection_gradients_K21_V22 <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                            Stem_Height_Mean_Centred +
+                                                            Corolla_Diameter_Mean_Centred +
+                                                            Tube_Width_Mean_Centred +
+                                                            Tube_Length_Mean_Centred +
+                                                            NSD_Mean_Centred +
+                                                            Stickidium_Mean_Centred +
+                                                            Total_Flowers_Mean_Centred,
+                                                     random = ~ 1 | Plant_ID,
+                                                     na.action = na.omit,
+                                                     data = data_phenotypes %>% 
+                                                       filter(Population_Year %in% c("Knivsasen_2021", "Veberod_2022")))
+```
+
+```{r warning=FALSE}
+test_spatiotemporal_variation <- compare_performance(data_selection_gradients_K21_V22, data_selection_gradients_K21_V22_ancova)
+```
+
+# Load Data: Mean-Standardized Phenotypic Selection Gradients
+
+```{r}
+data_selection_gradients_knivsasen_2021 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2021.rds")))
+
+data_selection_gradients_knivsasen_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2022.rds")))
+  
+data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Veberod_2022.rds")))
+```
+
+```{r}
+data_selection_gradients <- rbind(data_selection_gradients_knivsasen_2021,
+                                  data_selection_gradients_knivsasen_2022,
+                                  data_selection_gradients_veberod_2022)
+```
+
+# Mean Value and Error-Corrected Variance of the Mean-Standardized Phenotypic Selection Gradients
+
+```{r warning=FALSE}
+data_selection_gradients_mean_variance <- data_selection_gradients %>% 
+  group_by(Trait) %>% 
+  filter(Treatment == "Open_Control") %>% 
+  summarise(Mean_Mean_Selection_Gradient = mean(Mean_Selection_Gradient),
+            Absolute_Mean_Mean_Selection_Gradient = mean(abs(Mean_Selection_Gradient)),
+            Variance_Mean_Selection_Gradient = var(Mean_Selection_Gradient),
+            Mean_Mean_SE_Selection_Gradient = mean(Mean_SE_Selection_Gradient^2),
+            Difference = Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient,
+            Varriance_Corrected_Mean_Selection_Gradient = sqrt(Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient)) %>% 
+  mutate_if(is.numeric, round, digits = 4)
+```
+
+```{r}
+saveRDS(data_selection_gradients_mean_variance, 
+        file = paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected_Spatio_Temporal.rds")))
+```
+
+## Knivsåsen 2021 vs. Knivsåsen 2022
+
+```{r warning=FALSE}
+data_selection_gradients_mean_variance_K21_K22 <- data_selection_gradients %>% 
+  group_by(Trait) %>% 
+  filter(Treatment == "Open_Control") %>% 
+  filter(Population %in% c("Knivsasen_2021", "Knivsasen_2022")) %>% 
+  summarise(Variance_Mean_Selection_Gradient = var(Mean_Selection_Gradient),
+            Mean_Mean_SE_Selection_Gradient = mean(Mean_SE_Selection_Gradient^2),
+            Difference = Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient,
+            Varriance_Corrected_Mean_Selection_Gradient = sqrt(Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient)) %>% 
+  mutate_if(is.numeric, round, digits = 4) %>% 
+  mutate(Comparison = "Temporal")
+```
+
+## Knivsåsen 2022 vs. Veberöd 2022
+
+```{r warning=FALSE}
+data_selection_gradients_mean_variance_K22_V22 <- data_selection_gradients %>% 
+  group_by(Trait) %>% 
+  filter(Treatment == "Open_Control") %>% 
+  filter(Population %in% c("Knivsasen_2022", "Veberod_2022")) %>% 
+  summarise(Variance_Mean_Selection_Gradient = var(Mean_Selection_Gradient),
+            Mean_Mean_SE_Selection_Gradient = mean(Mean_SE_Selection_Gradient^2),
+            Difference = Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient,
+            Varriance_Corrected_Mean_Selection_Gradient = sqrt(Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient)) %>% 
+  mutate_if(is.numeric, round, digits = 4) %>% 
+  mutate(Comparison = "Spatial")
+```
+
+## Knivsåsen 2021 vs. Veberöd 2022
+
+```{r warning=FALSE}
+data_selection_gradients_mean_variance_K21_V22 <- data_selection_gradients %>% 
+  group_by(Trait) %>% 
+  filter(Treatment == "Open_Control") %>% 
+  filter(Population %in% c("Knivsasen_2021", "Veberod_2022")) %>% 
+  summarise(Variance_Mean_Selection_Gradient = var(Mean_Selection_Gradient),
+            Mean_Mean_SE_Selection_Gradient = mean(Mean_SE_Selection_Gradient^2),
+            Difference = Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient,
+            Varriance_Corrected_Mean_Selection_Gradient = sqrt(Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient)) %>% 
+  mutate_if(is.numeric, round, digits = 4) %>% 
+  mutate(Comparison = "Spatial_Temporal")
+```
+
+## Merge Mean Value and Error-Corrected Variance of the Mean-Standardized Phenotypic Selection Gradients
+
+```{r}
+data_selection_gradients_mean_variance_K21_K22_V22 <- rbind(data_selection_gradients_mean_variance_K21_K22,
+                                                            data_selection_gradients_mean_variance_K22_V22,
+                                                            data_selection_gradients_mean_variance_K21_V22)
+```
+
+```{r}
+saveRDS(data_selection_gradients_mean_variance_K21_K22_V22, 
+        file = paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected.rds")))
+```

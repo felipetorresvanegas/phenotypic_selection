@@ -1,0 +1,535 @@
+---
+title: "Figures"
+---
+
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(ggpp)
+library(ggpubr)
+library(readr)
+library(reshape2)
+library(tidyr)
+library(stringr)
+```
+
+# Load Data: Mean-Standardized Phenotypic Selection Gradients
+
+```{r}
+data_selection_gradients_knivsasen_2021 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2021.rds")))
+
+data_selection_gradients_knivsasen_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2022.rds")))
+  
+data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Veberod_2022.rds")))
+```
+
+```{r}
+data_selection_gradients <- rbind(data_selection_gradients_knivsasen_2021,
+                                  data_selection_gradients_knivsasen_2022,
+                                  data_selection_gradients_veberod_2022)
+```
+
+# Graph: Mean-Standardized Phenotypic Selection Gradients (Knivsåsen 2021, Knivsåsen 2022, Veberöd 2022)
+
+```{r}
+labels_columns <- c("Stem_Height" = "Inflorescence\nLength (IL)",
+                    "Stickidium" = "Glandular Region\nLength (GR)",
+                    "Corolla_Diameter" = "Corolla\nDiameter (CD)",
+                    "Tube_Width" = "Floral Tube\nWidth (TW)",
+                    "Tube_Length" = "Floral Tube\nLength (TL)",
+                    "NSD" = "Nectary-Stigma\nDistance (NSD)",
+                    "Total_Flowers" = "Number of\nFlowers (FN)")
+```
+
+```{r}
+compare_observational <-data.frame(Trait = c("Stickidium", "Total_Flowers", "Stickidium", "Corolla_Diameter", "NSD"),
+                                   .y. = c("Mean_Selection_Gradient", "Mean_Selection_Gradient", "Mean_Selection_Gradient", "Mean_Selection_Gradient", "Mean_Selection_Gradient"),
+                                   group1 = c("Knivsasen_2022", "Knivsasen_2022", "Knivsasen_2021", "Knivsasen_2021", "Knivsasen_2021"),
+                                   group2 = c("Veberod_2022", "Veberod_2022", "Knivsasen_2022", "Veberod_2022", "Veberod_2022"),
+                                   p.adj = c("*", I("\u2020"), "*", I("\u2020"), I("\u2020")))
+```
+
+```{r}
+tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Observational.tiff")), units = "in", width = 10.5, height = 5, res = 300)
+data_selection_gradients %>% 
+  filter(Treatment %in% c("Open_Control")) %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
+  ggbarplot(x = "Population",
+            y = "Mean_Selection_Gradient",
+            fill = "Population",
+            alpha = 0.75,
+            facet.by = "Trait",
+            nrow = 1,
+            color = "black") +
+  geom_errorbar(aes(ymin = Mean_Selection_Gradient - Mean_SE_Selection_Gradient,
+                    ymax = Mean_Selection_Gradient + Mean_SE_Selection_Gradient),
+                position = position_dodge(), width = 0.1) +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.273, Trait = "Stem_Height"), size = 2.5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.105, Trait = "Stickidium"), size = 2.5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.939, Trait = "Total_Flowers"), size = 2.5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.397, Trait = "Corolla_Diameter"), size = 2.5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.141, Trait = "Tube_Width"), size = 2.5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.087, Trait = "Tube_Length"), size = 2.5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.118, Trait = "NSD"), size = 2.5, color="red") +
+  theme_bw(base_size = 15) +
+  xlab("Population") +
+  ylab(expression(paste("Mean-Standardized Selection Gradient (", beta, ")"))) +
+  geom_hline(yintercept = 0, linetype = "solid") +
+  facet_grid(cols = vars(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))),
+             labeller = labeller(Trait = as_labeller(labels_columns))) +
+  theme(legend.position = "top",
+        legend.title = element_blank(),
+        axis.text.x = element_text(size = 15, angle = 90),
+        axis.text.y = element_text(size = 15),
+        panel.grid.minor = element_blank()) +
+  scale_fill_grey(start = 0.95, end = 0.05,
+                  labels = c(expression(paste("Knivsåsen 2021 (K"[2021], ")")),
+                             expression(paste("Knivsåsen 2022 (K"[2022], ")")),
+                             expression(paste("Veberöds Ljung 2022 (V"[2022], ")")))) +
+  scale_y_continuous(limits = c(-1.2, 1.5), breaks = seq(-1, 1.5, by = 0.5)) +
+  geom_text(mapping = aes(x = Population, y = Mean_Selection_Gradient / 1000, label = Significant),
+            position = position_dodgenudge(y = -0.1, x = 0, direction = "split", width = 1),
+            size = 5) +
+  # stat_pvalue_manual(compare_observational, y.position = 1.5, size = 5) +
+  scale_x_discrete(labels = c(expression(paste("K"[2021])),
+                              expression(paste("K"[2022])),
+                              expression(paste("V"[2022]))))
+```
+
+```{r}
+tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Observational_SCAPE.tiff")), units = "in", width = 11.5, height = 7, res = 300)
+data_selection_gradients %>% 
+  filter(Treatment %in% c("Open_Control")) %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Stickidium"))) %>% 
+  ggbarplot(x = "Population",
+            y = "Mean_Selection_Gradient",
+            fill = "Population",
+            alpha = 0.75,
+            facet.by = "Trait",
+            nrow = 1,
+            color = "black") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.265, Trait = "Stem_Height"), size = 5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.920, Trait = "Total_Flowers"), size = 5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.396, Trait = "Corolla_Diameter"), size = 5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.135, Trait = "Tube_Width"), size = 5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.087, Trait = "Tube_Length"), size = 5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.128, Trait = "NSD"), size = 5, color="red") +
+  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.105, Trait = "Stickidium"), size = 5, color="red") +
+  geom_errorbar(aes(ymin = Mean_Selection_Gradient - Mean_SE_Selection_Gradient,
+                    ymax = Mean_Selection_Gradient + Mean_SE_Selection_Gradient),
+                position = position_dodge(), width = 0.1) +
+  theme_bw(base_size = 15) +
+  xlab("") +
+  ylab(expression(paste("Mean-Standardized Selection Gradient (", beta, ")"))) +
+  geom_hline(yintercept = 0, linetype = "solid") +
+  facet_grid(cols = vars(Trait = factor(Trait, levels = c("Stem_Height", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Stickidium"))),
+             labeller = labeller(Trait = as_labeller(labels_columns))) +
+  theme(legend.position = "top",
+        legend.justification = "left",
+        legend.title = element_blank(),
+        axis.text.x = element_text(size = 15, angle = 90),
+        axis.text.y = element_text(size = 15),
+        panel.grid.minor = element_blank()) +
+  scale_fill_grey(start = 0.95, end = 0.05,
+                  labels = c(expression(paste("Knivsåsen 2021 (K"[2021], ")")),
+                             expression(paste("Knivsåsen 2022 (K"[2022], ")")),
+                             expression(paste("Veberöds Ljung 2022 (V"[2022], ")")))) +
+  scale_y_continuous(limits = c(-1.05, 1.5), breaks = seq(-1, 1.5, by = 0.5)) +
+  geom_text(mapping = aes(x = Population, y = Mean_Selection_Gradient / 1000, label = Significant),
+            position = position_dodgenudge(y = -0.1, x = 0, direction = "split", width = 1),
+            size = 5) +
+  scale_x_discrete(labels = c(expression(paste("K"[2021])),
+                              expression(paste("K"[2022])),
+                              expression(paste("V"[2022])))) +
+  labs(subtitle = expression(paste("(|", beta, "|)")),
+       caption = expression(atop("* p < 0.05", "\u2020 ≈ 0.05"))) +
+  theme(plot.subtitle = element_text(size = 15, hjust = 0.05),
+        plot.title.position = "panel",
+        plot.caption.position = "plot",
+        plot.caption = element_text(size = 15, hjust = 0.06))
+```
+
+# Graph: Mean-Standardized Phenotypic Selection Gradients (Temporal Pollinator Exclussion Experiment)
+
+## No Exclusion of Pollinators (NO) vs. Complete Exclusion of Pollinators (CE)
+
+```{r}
+compare_CE_NO <-data.frame(Trait = c("Tube_Width", "Total_Flowers"),
+                           .y. = c("Mean_Selection_Gradient", "Mean_Selection_Gradient"),
+                           group1 = c("Open_Control", "Open_Control"),
+                           group2 = c("Always_Caged", "Always_Caged"),
+                           p.adj = c("**",I("\u2020")))
+```
+
+```{r message=FALSE}
+graph_selection_gradients_CE_NO <-
+data_selection_gradients %>% 
+  filter(Population == "Veberod_2022") %>% 
+  filter(Treatment %in% c("Open_Control", "Always_Caged")) %>% 
+  mutate(Treatment = factor(Treatment, levels = c("Always_Caged", "Open_Control"))) %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
+  ggbarplot(x = "Treatment",
+            y = "Mean_Selection_Gradient",
+            fill = "Treatment",
+            palette = c("#D55E00", "#009E73"),
+            alpha = 0.5,
+            facet.by = "Trait",
+            nrow = 1,
+            color = "black") +
+  geom_text(mapping = aes(x = Treatment, y = Mean_Selection_Gradient / 1000, label = Significant),
+            position = position_dodgenudge(y = -0.5, x = 0, direction = "split", width = 1),
+            size = 5) +
+  geom_errorbar(aes(ymin = Mean_Selection_Gradient - Mean_SE_Selection_Gradient,
+                    ymax = Mean_Selection_Gradient + Mean_SE_Selection_Gradient),
+                position = position_dodge(), width = 0.1) +
+  theme_bw(base_size = 15) +
+  xlab("Experimental Treatment") +
+  ylab(expression(paste("Mean-Standardized Selection Gradient (", beta, ")"))) +
+  geom_hline(yintercept = 0, linetype = "solid") +
+  theme(legend.position = "top",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 15),
+        axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        panel.grid.minor = element_blank()) +
+  scale_fill_manual(values = c("#D55E00", "#009E73"),
+                    labels = c("Complete Exclusion of Pollinators (CE)", "No Exclusion of Pollinators (NO)")) +
+  scale_y_continuous(limits = c(-3.25, 4.5), breaks = seq(-3, 4, by = 1)) +
+  scale_x_discrete(labels = c("CE", "NO")) +
+  facet_grid(cols = vars(Trait = factor(Trait,levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))),
+             labeller = labeller(Trait = as_labeller(labels_columns)))
+  # stat_pvalue_manual(compare_CE_NO, y.position = 4.75, size = 5)
+```
+
+# Exclusion of Diurnal Pollinators (DE) vs. Exclusion of Nocturnal Pollinators (NE)
+
+```{r}
+compare_DE_NE <-data.frame(Trait = "Stickidium",
+                           .y. = "Mean_Selection_Gradient",
+                           group1 = "Day_Caged",
+                           group2 = "Night_Caged",
+                           p.adj = I("\u2020"))
+```
+
+```{r message=FALSE}
+graph_selection_gradients_DE_NE <-
+data_selection_gradients %>% 
+  filter(Population == "Veberod_2022") %>% 
+  filter(Treatment %in% c("Day_Caged", "Night_Caged")) %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>%
+  ggbarplot(x = "Treatment",
+            y = "Mean_Selection_Gradient",
+            fill = "Treatment",
+            palette = c("#999999", "#F0E442"),
+            alpha = 0.5,
+            facet.by = "Trait",
+            nrow = 1,
+            color = "black") +
+  geom_text(mapping = aes(x = Treatment, y = Mean_Selection_Gradient / 1000, label = Significant),
+            position = position_dodgenudge(y = -0.5, x = 0, direction = "split", width = 1),
+            size = 5) +
+  geom_errorbar(aes(ymin = Mean_Selection_Gradient - Mean_SE_Selection_Gradient,
+                    ymax = Mean_Selection_Gradient + Mean_SE_Selection_Gradient),
+                position = position_dodge(), width = 0.1) +
+  theme_bw(base_size = 15) +
+  xlab("Experimental Treatment") +
+  ylab(expression(paste("Mean-Standardized Selection Gradient (", beta, ")"))) +
+  geom_hline(yintercept = 0, linetype = "solid") +
+  theme(legend.position = "top",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 15),
+        axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        panel.grid.minor = element_blank()) +
+  scale_fill_manual(values = c("#999999", "#F0E442"),
+                    labels = c("Exclusion of Diurnal Pollinators (DE)", "Exclusion of Nocturnal Pollinators (NE)")) +
+  scale_y_continuous(limits = c(-3.25, 4.5), breaks = seq(-3, 4, by = 1)) +
+  scale_x_discrete(labels = c("DE", "NE")) +
+  facet_grid(cols = vars(Trait = factor(Trait,levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))),
+             labeller = labeller(Trait = as_labeller(labels_columns)))
+  # stat_pvalue_manual(compare_DE_NE, y.position = 4.75, size = 5)
+```
+
+## Assemble Graph for Temporal Pollinator Exclusion
+
+```{r}
+tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Experiment.tiff")), units = "in", width = 10.5, height = 10.5, res = 300)
+ggarrange(graph_selection_gradients_CE_NO, graph_selection_gradients_DE_NE,
+          labels = c("(A)", "(B)"),
+          ncol = 1,
+          common.legend = FALSE, legend = "top")
+```
+
+# Divergence in Phenotypic Selecion on Floral Traits
+
+```{r}
+data_selection_gradients_difference <- read_rds(paste0(here::here("GitHub/Data/Data_Selection_Gradients_Difference.rds")))
+```
+
+```{r}
+data_selection_gradients_difference <- data_selection_gradients_difference %>% 
+  mutate(Difference_Corrected = replace_na(Difference_Corrected, 0))
+```
+
+```{r}
+data_selection_gradients_difference <- data_selection_gradients_difference %>% 
+  pivot_longer(cols = c("Difference", "Difference_Corrected"),
+               names_to = "Type",
+               values_to = "Difference_Value")
+```
+
+```{r}
+data_selection_gradients_difference <- data_selection_gradients_difference %>% 
+  mutate(SE = ifelse(Type == "Difference_Corrected", NA, SE))
+```
+
+```{r}
+tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Difference_Corrected.tiff")), units = "in", width = 10.5, height = 5, res = 300)
+data_selection_gradients_difference %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
+  ggplot(aes(x = Pollinator_Divergence, y = Difference_Value)) +
+  geom_hline(yintercept = 0, linetype = "solid") +
+  geom_line(aes(group = Type, color = Type), linewidth = 1) +
+  geom_point(data = . %>% filter(Type == "Difference"), aes(color = Type, group = Type), size = 3) +
+  geom_errorbar(aes(ymin = Difference_Value - SE, ymax = Difference_Value + SE), position = position_dodge(), width = 0.2) +
+  geom_point(data = . %>% filter(Type == "Difference_Corrected"), aes(color = Type, group = Type), size = 3) +
+  theme_bw(base_size = 12) +
+  xlab("Divergence in Local Pollinator Assemblage") +
+  # ylab(bquote(atop("Absolute Value of Difference in", "Phenotypic Selection Gradients (|" ~ beta[i] ~ " - " ~ beta[j] ~ "|)"))) +
+  ylab(bquote(atop("Absolute Value of Difference in", "Phenotypic Selection Gradients (" ~ italic("D") ~ ")"))) +
+  facet_wrap(~ Trait,
+             nrow = 1,
+             labeller = labeller(Trait = as_labeller(labels_columns))) +
+  theme(legend.position = "none",
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 90, size = 10, hjust = 1, vjust = 0.375),
+        axis.text.y = element_text(size = 12),
+        axis.title.y.right = element_text(color = "darkgray"),
+        axis.text.y.right = element_text(color = "darkgray"),
+        axis.ticks.y.right = element_line(color = "darkgray")) +
+  scale_x_discrete(limits = c("Low", "Mid", "High"),
+                   labels = c(expression(atop(NA, atop(textstyle("Temporal: "), textstyle("K"[2021] * " - K"[2022])))),
+                              expression(atop(NA, atop(textstyle("Spatial: "), textstyle("K"[2022] * " - V"[2022])))),
+                              expression(atop(NA, atop(textstyle("Experimental: "), textstyle("V"[DE] * " - V"[NE])))))) +
+  scale_y_continuous(sec.axis = sec_axis(~ ., name = expression(atop("Error-Corrected Difference in", paste("Phenotypic Selection Gradients (" ~ italic(D[C]) ~ ")"))))) +
+  scale_color_manual(values = c("Difference" = "black", "Difference_Corrected" = "gray"))
+```
+
+# Load Data: Mean-Standardized Phenotypic Selection Gradients at the Plant Level
+
+```{r}
+data_selection_gradients_plant_level <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Plant_Level.rds")))
+```
+
+```{r}
+tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Observational_Plant_Level.tiff")), units = "in", width = 10.5, height = 5, res = 300)
+data_selection_gradients_plant_level %>% 
+  filter(Treatment == "Open_Control") %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
+  ggbarplot(x = "Population",
+            y = "Mean_Selection_Gradient",
+            fill = "Population",
+            alpha = 0.75,
+            facet.by = "Trait",
+            nrow = 1,
+            color = "black") +
+  geom_errorbar(aes(ymin = Mean_Selection_Gradient - Mean_SE_Selection_Gradient,
+                    ymax = Mean_Selection_Gradient + Mean_SE_Selection_Gradient),
+                position = position_dodge(), width = 0.1) +
+  theme_bw(base_size = 15) +
+  xlab("Population") +
+  ylab(expression(paste("Mean-Standardized Selection Gradient (", beta, ")"))) +
+  geom_hline(yintercept = 0, linetype = "solid") +
+  facet_grid(cols = vars(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))),
+             labeller = labeller(Trait = as_labeller(labels_columns))) +
+  theme(legend.position = "top",
+        legend.title = element_blank(),
+        axis.text.x = element_text(size = 15, angle = 90),
+        axis.text.y = element_text(size = 15),
+        panel.grid.minor = element_blank()) +
+  scale_fill_grey(start = 0.95, end = 0.05,
+                  labels = c(expression(paste("Knivsåsen 2021 (K"[2021], ")")),
+                             expression(paste("Knivsåsen 2022 (K"[2022], ")")),
+                             expression(paste("Veberöds Ljung 2022 (V"[2022], ")")))) +
+  scale_y_continuous(limits = c(-1.2, 2), breaks = seq(-1, 2, by = 0.5)) +
+  geom_text(mapping = aes(x = Population, y = Mean_Selection_Gradient / 1000, label = Significant),
+            position = position_dodgenudge(y = -0.1, x = 0, direction = "split", width = 1),
+            size = 5) +
+  scale_x_discrete(labels = c(expression(paste("K"[2021])),
+                              expression(paste("K"[2022])),
+                              expression(paste("V"[2022]))))
+```
+
+# Load Data: Mean Value and Error-Corrected Variance of the Mean-Standardized Phenotypic Selection Gradients
+
+```{r}
+data_selection_gradients_mean_variance_K21_K22_V22 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected.rds")))
+```
+
+```{r}
+data_selection_gradients_mean_variance_experiment <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected_Experiment.rds")))
+```
+
+```{r}
+data_selection_gradients_mean_variance <- rbind(data_selection_gradients_mean_variance_K21_K22_V22,
+                                                data_selection_gradients_mean_variance_experiment)
+```
+
+```{r}
+data_selection_gradients_mean_variance <- data_selection_gradients_mean_variance %>% 
+  mutate(Varriance_Corrected_Mean_Selection_Gradient = replace_na(Varriance_Corrected_Mean_Selection_Gradient, 0))
+```
+
+```{r}
+data_selection_gradients_mean_variance %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
+  ggplot(aes(y = Varriance_Corrected_Mean_Selection_Gradient, x = Trait, group = Comparison)) +
+  geom_point(aes(shape = Comparison, color = Comparison), size = 5, stroke = 2.5) +
+  scale_x_discrete(labels = c("Inflorescence\nLength (IL)",
+                              "Glandular Region\nLength (GR)",
+                              "Number of\nFlowers (FN)",
+                              "Corolla\nDiameter (CD)",
+                              "Floral Tube\nWidth (TW)",
+                              "Floral Tube\nLength (TL)",
+                              "Nectary-Stigma\nDistance (NSD)")) +
+  scale_color_manual(values = c("blue", "cyan", "green", "orange", "red"),
+                     breaks = c("Temporal", "Spatial", "Spatial_Temporal", "NO_CE", "DE_NE"),
+                     labels = c(expression(paste("Temporal:", "K"[2021], "- K"[2022])),
+                                expression(paste("Spatial:", "K"[2022], " - V"[2022])),
+                                expression(paste("Spatial and Temporal: K"[2021], " - V"[2022])),
+                                "Complete Exclusion of Pollinators (CE)\nNo Exclusion of Pollinators (NO)",
+                                "Exclusion of Diurnal Pollinators (DE)\nExclusion of Nocturnal Pollinators (NE)")) +
+  scale_shape_manual(values = c(21, 22, 23, 24, 25),
+                     breaks = c("Temporal", "Spatial", "Spatial_Temporal", "NO_CE", "DE_NE"),
+                     labels = c(expression(paste("Temporal:", "K"[2021], "- K"[2022])),
+                                expression(paste("Spatial:", "K"[2022], " - V"[2022])),
+                                expression(paste("Spatial and Temporal: K"[2021], " - V"[2022])),
+                                "Complete Exclusion of Pollinators (CE)\nNo Exclusion of Pollinators (NO)",
+                                "Exclusion of Diurnal Pollinators (DE)\nExclusion of Nocturnal Pollinators (NE)")) +
+  theme_bw(base_size = 15) +
+  xlab("Floral Trait") +
+  ylab(expression(atop("Error-Corrected Standard Deviation of", paste("Mean-Standardized Selection Gradient (", sigma[beta]^c, ")")))) +
+  theme(legend.position = "right",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 15),
+        legend.text.align = 0,
+        legend.key.height = unit(1.5, "cm"),
+        axis.text.x = element_text(size = 15, angle = 90),
+        axis.text.y = element_text(size = 15),
+        panel.grid.minor = element_blank())
+```
+
+```{r}
+data_selection_gradients_difference_mean_variance <- rbind(data_selection_gradients_difference %>% 
+                                                             rename(Value = Difference) %>% 
+                                                             mutate(Type = "Absolute_Difference") %>% 
+                                                             select(Trait, Value, SE, Comparison, Type),
+                                                           data_selection_gradients_mean_variance %>% 
+                                                             mutate(SE = NA) %>% 
+                                                             rename(Value = Varriance_Corrected_Mean_Selection_Gradient) %>% 
+                                                             mutate(Type = "Error_Corrected_Variance") %>% 
+                                                             select(Trait, Value, SE, Comparison, Type))
+```
+
+```{r}
+data_selection_gradients_difference_mean_variance <- data_selection_gradients_difference_mean_variance %>% 
+  mutate(Comparison = str_replace(Comparison, "KN_21_KN_22", "Temporal")) %>% 
+  mutate(Comparison = str_replace(Comparison, "KN_22_VB_22", "Spatial")) %>% 
+  mutate(Comparison = str_replace(Comparison, "Day_Exclusion_Night_Exclusion", "DE_NE"))
+```
+
+```{r}
+tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Difference_Variance.tiff")), units = "in", width = 10.5, height = 5, res = 300)
+data_selection_gradients_difference_mean_variance %>% 
+  filter(Comparison %in% c("Temporal", "Spatial", "DE_NE")) %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
+  mutate(Type = factor(Type, levels = c("Absolute_Difference", "Error_Corrected_Variance"))) %>% 
+  ggplot(aes(x = Comparison, y = Value)) +
+  geom_hline(yintercept = 0, linetype = "solid") +
+  geom_line(aes(group = Type, color = Type), linewidth = 1) +
+  geom_point(data = . %>% filter(Type == "Error_Corrected_Variance"), aes(color = Type, group = Type), size = 3) +
+  geom_point(data = . %>% filter(Type == "Absolute_Difference"), aes(color = Type, group = Type), size = 3) +
+  theme_bw(base_size = 12) +
+  xlab("Source of Variation") +
+  ylab(bquote(atop("Absolute Value of Difference in", "Phenotypic Selection Gradients (|" ~ beta[i] ~ " - " ~ beta[j] ~ "|)"))) +
+  facet_wrap(~ Trait, nrow = 1, labeller = labeller(Trait = as_labeller(labels_columns))) +
+  theme(legend.position = "none",
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 90, size = 10, hjust = 1, vjust = 0.375),
+        axis.text.y = element_text(size = 12),
+        axis.title.y.right = element_text(color = "darkgray"),
+        axis.text.y.right = element_text(color = "darkgray"),
+        axis.ticks.y.right = element_line(color = "darkgray")) +
+  scale_x_discrete(limits = c("Temporal", "Spatial", "DE_NE"),
+                   labels = c(expression(atop(NA, atop(textstyle("Temporal: "), textstyle("K"[2021] * " - K"[2022])))),
+                              expression(atop(NA, atop(textstyle("Spatial: "), textstyle("K"[2022] * " - V"[2022])))),
+                              expression(atop(NA, atop(textstyle("Experimental: "), textstyle("V"[DE] * " - V"[NE])))))) +
+  scale_y_continuous(limits = c(-1, 3.75),
+                     breaks = seq(-1, 3.75, by = 1),
+                     sec.axis = sec_axis(~.,
+                                         name = expression(atop("Error-Corrected Standard Deviation of", paste("Mean-Standardized Selection Gradient (", sigma[beta]^c, ")"))))) +
+  geom_errorbar(aes(ymin = Value - SE, ymax = Value + SE), position = position_dodge(), width = 0.2) +
+  scale_color_manual(values = c("Absolute_Difference" = "black", "Error_Corrected_Variance" = "gray"))
+```
+
+```{r}
+tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Difference_Variance_SCAPE.tiff")), units = "in", width = 11.5, height = 7, res = 300)
+data_selection_gradients_difference_mean_variance %>% 
+  filter(Comparison %in% c("Temporal", "Spatial", "DE_NE")) %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Stickidium"))) %>% 
+  filter(Type == "Error_Corrected_Variance") %>% 
+  ggplot(aes(x = Comparison, y = Value)) +
+  geom_hline(yintercept = 0, linetype = "solid") +
+  geom_line(aes(group = Type, color = Type), linewidth = 2, color = "black") +
+  geom_point(data = . %>% filter(Type == "Error_Corrected_Variance"), aes(color = Type, group = Type), size = 5, color = "black") +
+  theme_bw(base_size = 15) +
+  xlab("") +
+  ylab(expression(atop("Error-Corrected Standard Deviation of", paste("Mean-Standardized Selection Gradient (", sigma[beta]^c, ")")))) +
+  facet_wrap(~ Trait, nrow = 1, labeller = labeller(Trait = as_labeller(labels_columns))) +
+  theme(legend.position = "none",
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 15),
+        axis.text.y = element_text(size = 15)) +
+  scale_x_discrete(limits = c("Temporal", "Spatial", "DE_NE"),
+                   labels = c("Temporal", "Spatial", "Diurnal vs. Nocturnal")) +
+  scale_y_continuous(limits = c(0, 1),
+                     breaks = seq(0, 1, by = 0.25))
+```
+
+```{r}
+data_selection_gradients_mean_variance_spatio_temporal <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected_Spatio_Temporal.rds")))
+```
+
+```{r}
+data_selection_gradients_mean_variance_spatio_temporal <- data_selection_gradients_mean_variance_spatio_temporal %>% 
+  mutate(Varriance_Corrected_Mean_Selection_Gradient = replace_na(Varriance_Corrected_Mean_Selection_Gradient, 0))
+```
+
+```{r}
+tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Difference_Variance_Spatio_Temporal.tiff")), units = "in", width = 11.5, height = 7, res = 300)
+data_selection_gradients_mean_variance_spatio_temporal %>% 
+  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Stickidium"))) %>% 
+  ggplot(aes(x = Trait, y = Varriance_Corrected_Mean_Selection_Gradient)) +
+  geom_bar(stat = "identity", color = "black", fill = "black", alpha = 0.75) +
+  theme_bw(base_size = 15) +
+  xlab("") +
+  ylab(expression(atop("Error-Corrected Standard Deviation of", paste("Mean-Standardized Selection Gradient (", sigma[beta]^c, ")")))) +
+  theme(legend.position = "none",
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 15),
+        axis.text.y = element_text(size = 15)) +
+  scale_x_discrete(limits = c("Stem_Height", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Stickidium"),
+                   labels = c("Inflorescence\nLength (IL)",
+                              "Number of\nFlowers (FN)",
+                              "Corolla\nDiameter (CD)",
+                              "Floral Tube\nWidth (TW)",
+                              "Floral Tube\nLength (TL)",
+                              "Nectary-Stigma\nDistance (NSD)",
+                              "Glandular Region\nLength (GR)")) +
+  scale_y_continuous(limits = c(0, 0.4),
+                     breaks = seq(0, 0.4, by = 0.1))
+```

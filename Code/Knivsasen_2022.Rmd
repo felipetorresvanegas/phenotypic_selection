@@ -1,0 +1,273 @@
+---
+title: "Phenotypic Selection on Floral Traits: Knivsåsen 2022"
+---
+
+```{r include=FALSE}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(nlme)
+library(reshape2)
+library(MuMIn)
+library(performance)
+```
+
+# Load Data: Knivsåsen 2022
+
+```{r}
+data_knivsasen_2022 <- readxl::read_excel(paste0(here::here("GitHub/Data/Selection_2022_15-02-23.xlsx")), sheet = "Knivsasen_2022")
+```
+
+```{r}
+data_knivsasen_2022 <- suppressWarnings(data_knivsasen_2022 %>% 
+                                          mutate_at(c("Capsules_Collected",
+                                                      "Seeds_Weight",
+                                                      "Stem_Height",
+                                                      "Flowers_First_Visit",
+                                                      "Buds_First_Visit",
+                                                      "Eaten_Buds_First_Visit",
+                                                      "Capsules_First_Visit",
+                                                      "Corolla_Diameter",
+                                                      "Tube_Width",
+                                                      "Tube_Length",
+                                                      "NSD",
+                                                      "Stickidium",
+                                                      "Open_Capsules_Second_Visit",
+                                                      "Closed_Capsules_Second_Visit",
+                                                      "Eaten_Capsules_Second_Visit",
+                                                      "Failed_Flowers_Second_Visit",
+                                                      "Flowers_Second_Visit",
+                                                      "Buds_Second_Visit"),
+                                                    as.numeric))
+```
+
+# Plant Reproductive Success: Knivsåsen 2022
+
+```{r}
+data_knivsasen_2022 <- data_knivsasen_2022 %>% 
+  mutate(Total_Flowers = 
+           Open_Capsules_Second_Visit + 
+           Closed_Capsules_Second_Visit + 
+           Eaten_Capsules_Second_Visit + 
+           Failed_Flowers_Second_Visit + 
+           Flowers_Second_Visit +
+           Buds_Second_Visit) %>% 
+  mutate(Total_Fruits = 
+           Open_Capsules_Second_Visit + 
+           Closed_Capsules_Second_Visit + 
+           Eaten_Capsules_Second_Visit) %>% 
+  mutate(Mean_Seeds_Weight = round(Seeds_Weight / Capsules_Collected, digits = 4)) %>% 
+  mutate(Fruit_Yield_Total_Fruits = Total_Fruits * Mean_Seeds_Weight)
+```
+
+```{r}
+data_knivsasen_2022 <- data_knivsasen_2022 %>% 
+  mutate(Relative_Total_Flowers = round(Total_Flowers / mean(Total_Flowers, na.rm = TRUE), digits = 4)) %>% 
+  mutate(Relative_Total_Fruits = round(Total_Fruits / mean(Total_Fruits, na.rm = TRUE), digits = 4)) %>% 
+  mutate(Relative_Mean_Seeds_Weight = round(Mean_Seeds_Weight / mean(Mean_Seeds_Weight, na.rm = TRUE), digits = 4)) %>% 
+  mutate(Relative_Fruit_Yield_Total_Fruits = round(Fruit_Yield_Total_Fruits / mean(Fruit_Yield_Total_Fruits, na.rm = TRUE), digits = 4))
+```
+
+# Mean Centre Predictor Variables
+
+```{r}
+data_knivsasen_2022 <- data_knivsasen_2022 %>% 
+  mutate(Stem_Height_Mean_Centred = scale(Stem_Height, scale = FALSE)) %>% 
+  mutate(Corolla_Diameter_Mean_Centred = scale(Corolla_Diameter, scale = FALSE)) %>% 
+  mutate(Tube_Width_Mean_Centred = scale(Tube_Width, scale = FALSE)) %>% 
+  mutate(Tube_Length_Mean_Centred = scale(Tube_Length, scale = FALSE)) %>% 
+  mutate(NSD_Mean_Centred = scale(NSD, scale = FALSE)) %>% 
+  mutate(Stickidium_Mean_Centred = scale(Stickidium, scale = FALSE)) %>% 
+  mutate(Total_Flowers_Mean_Centred = scale(Total_Flowers, scale = FALSE))
+```
+
+```{r}
+saveRDS(data_knivsasen_2022, 
+        file = paste0(here::here("GitHub/Data/Data_Phenotypes_Knivsasen_2022.rds")))
+```
+
+# Linear Mixed-Effects Models
+
+## Directional Phenotypic Selection
+
+```{r}
+data_knivsasen_2022_selection_models_linear <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                           Stem_Height_Mean_Centred +
+                                                           Corolla_Diameter_Mean_Centred + 
+                                                           Tube_Width_Mean_Centred +
+                                                           Tube_Length_Mean_Centred +
+                                                           NSD_Mean_Centred +
+                                                           Stickidium_Mean_Centred +
+                                                           Total_Flowers_Mean_Centred,
+                                                         random = ~ 1 | Plant_ID,
+                                                         na.action = na.omit,
+                                                         data = data_knivsasen_2022)
+```
+
+## Quadratic and Correlational Phenotypic Selection
+
+```{r}
+data_knivsasen_2022_selection_models_quadratic <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                              Stem_Height_Mean_Centred +
+                                                              Corolla_Diameter_Mean_Centred + 
+                                                              Tube_Width_Mean_Centred +
+                                                              Tube_Length_Mean_Centred +
+                                                              NSD_Mean_Centred +
+                                                              Stickidium_Mean_Centred +
+                                                              Total_Flowers_Mean_Centred +
+                                                              I(Stem_Height_Mean_Centred^2) +
+                                                              I(Corolla_Diameter_Mean_Centred^2) +
+                                                              I(Tube_Width_Mean_Centred^2) +
+                                                              I(Tube_Length_Mean_Centred^2) +
+                                                              I(NSD_Mean_Centred^2) +
+                                                              I(Stickidium_Mean_Centred^2) +
+                                                              I(Total_Flowers_Mean_Centred^2) +
+                                                              Stem_Height_Mean_Centred:Corolla_Diameter_Mean_Centred +
+                                                              Stem_Height_Mean_Centred:Tube_Width_Mean_Centred +
+                                                              Stem_Height_Mean_Centred:Tube_Length_Mean_Centred +
+                                                              Stem_Height_Mean_Centred:NSD_Mean_Centred +
+                                                              Stem_Height_Mean_Centred:Stickidium_Mean_Centred +
+                                                              Stem_Height_Mean_Centred:Total_Flowers_Mean_Centred +
+                                                              Corolla_Diameter_Mean_Centred:Tube_Width_Mean_Centred +
+                                                              Corolla_Diameter_Mean_Centred:Tube_Length_Mean_Centred +
+                                                              Corolla_Diameter_Mean_Centred:NSD_Mean_Centred +
+                                                              Corolla_Diameter_Mean_Centred:Stickidium_Mean_Centred +
+                                                              Corolla_Diameter_Mean_Centred:Total_Flowers_Mean_Centred +
+                                                              Tube_Width_Mean_Centred:Tube_Length_Mean_Centred +
+                                                              Tube_Width_Mean_Centred:NSD_Mean_Centred +
+                                                              Tube_Width_Mean_Centred:Stickidium_Mean_Centred +
+                                                              Tube_Width_Mean_Centred:Total_Flowers_Mean_Centred +
+                                                              Tube_Length_Mean_Centred:NSD_Mean_Centred +
+                                                              Tube_Length_Mean_Centred:Stickidium_Mean_Centred +
+                                                              Tube_Length_Mean_Centred:Total_Flowers_Mean_Centred +
+                                                              NSD_Mean_Centred:Stickidium_Mean_Centred +
+                                                              NSD_Mean_Centred:Total_Flowers_Mean_Centred +
+                                                              Stickidium_Mean_Centred:Total_Flowers_Mean_Centred,
+                                                            random = ~ 1 | Plant_ID,
+                                                            na.action = na.omit,
+                                                            data = data_knivsasen_2022)
+```
+
+## Compare Performance: Directional, Quadratic, and Correlational Phenotypic Selection
+
+```{r}
+data_knivsasen_2022_models_performance <- compare_performance(data_knivsasen_2022_selection_models_linear,
+                                                              data_knivsasen_2022_selection_models_quadratic,
+                                                              metrics = c("AIC", "R2"), estimator = "ML")
+```
+
+# Mean and Standard Deviation of Floral Traits: Knivsåsen 2022
+
+```{r}
+data_knivsasen_2022_mean_traits <- data_knivsasen_2022 %>% 
+  summarise_at(c("Stem_Height",
+                 "Corolla_Diameter",
+                 "Tube_Width",
+                 "Tube_Length",
+                 "NSD",
+                 "Stickidium",
+                 "Total_Flowers"),
+               mean, na.rm = TRUE)
+```
+
+```{r message=FALSE}
+data_knivsasen_2022_mean_traits <- melt(data_knivsasen_2022_mean_traits, value.name = "Trait_Mean", variable.name = "Trait")
+```
+
+```{r}
+data_knivsasen_2022_sd_traits <- data_knivsasen_2022 %>% 
+  summarise_at(c("Stem_Height",
+                 "Corolla_Diameter",
+                 "Tube_Width",
+                 "Tube_Length",
+                 "NSD",
+                 "Stickidium",
+                 "Total_Flowers"),
+               sd, na.rm = TRUE)
+```
+
+```{r message=FALSE}
+data_knivsasen_2022_sd_traits <- melt(data_knivsasen_2022_sd_traits, value.name = "Trait_SD", variable.name = "Trait")
+```
+
+```{r}
+data_knivsasen_2022_summary_traits <- left_join(data_knivsasen_2022_mean_traits,
+                                                data_knivsasen_2022_sd_traits,
+                                                by = c("Trait" = "Trait"))
+```
+
+```{r}
+data_knivsasen_2022_summary_traits <- data_knivsasen_2022_summary_traits %>% 
+  mutate_if(is.numeric,
+            round,
+            digits = 4)
+```
+
+# Mean-Standardized Phenotypic Selection Gradients
+
+```{r}
+data_knivsasen_2022_selection_gradients <-
+  data.frame(Trait = c("Stem_Height",
+                       "Corolla_Diameter",
+                       "Tube_Width",
+                       "Tube_Length",
+                       "NSD",
+                       "Stickidium",
+                       "Total_Flowers"),
+             Method = rep(c("Linear"), each = 7),
+             Estimate = c(data_knivsasen_2022_selection_models_linear$coefficients$fixed[[2]],
+                          data_knivsasen_2022_selection_models_linear$coefficients$fixed[[3]],
+                          data_knivsasen_2022_selection_models_linear$coefficients$fixed[[4]],
+                          data_knivsasen_2022_selection_models_linear$coefficients$fixed[[5]],
+                          data_knivsasen_2022_selection_models_linear$coefficients$fixed[[6]],
+                          data_knivsasen_2022_selection_models_linear$coefficients$fixed[[7]],
+                          data_knivsasen_2022_selection_models_linear$coefficients$fixed[[8]]),
+             SE_Model = c(sqrt(diag(vcov(data_knivsasen_2022_selection_models_linear))[[2]]),
+                          sqrt(diag(vcov(data_knivsasen_2022_selection_models_linear))[[3]]),
+                          sqrt(diag(vcov(data_knivsasen_2022_selection_models_linear))[[4]]),
+                          sqrt(diag(vcov(data_knivsasen_2022_selection_models_linear))[[5]]),
+                          sqrt(diag(vcov(data_knivsasen_2022_selection_models_linear))[[6]]),
+                          sqrt(diag(vcov(data_knivsasen_2022_selection_models_linear))[[7]]),
+                          sqrt(diag(vcov(data_knivsasen_2022_selection_models_linear))[[8]])),
+             p = c(summary(data_knivsasen_2022_selection_models_linear)$tTable[,"p-value"][[2]],
+                   summary(data_knivsasen_2022_selection_models_linear)$tTable[,"p-value"][[3]],
+                   summary(data_knivsasen_2022_selection_models_linear)$tTable[,"p-value"][[4]],
+                   summary(data_knivsasen_2022_selection_models_linear)$tTable[,"p-value"][[5]],
+                   summary(data_knivsasen_2022_selection_models_linear)$tTable[,"p-value"][[6]],
+                   summary(data_knivsasen_2022_selection_models_linear)$tTable[,"p-value"][[7]],
+                   summary(data_knivsasen_2022_selection_models_linear)$tTable[,"p-value"][[8]]))
+```
+
+```{r}
+data_knivsasen_2022_selection_gradients <- data_knivsasen_2022_selection_gradients %>% 
+  mutate_if(is.numeric,
+            round,
+            digits = 4)
+```
+
+```{r}
+data_knivsasen_2022_selection_gradients <- data_knivsasen_2022_selection_gradients %>% 
+  mutate(Significant = ifelse(p >= 0.05 & p <= 0.10, paste0(expression("\u2020")),
+                              ifelse(data_knivsasen_2022_selection_gradients$p < 0.05 & data_knivsasen_2022_selection_gradients$p > 0.01, "*",
+                                     ifelse(data_knivsasen_2022_selection_gradients$p < 0.01 & data_knivsasen_2022_selection_gradients$p > 0.001, "**",
+                                            ifelse(data_knivsasen_2022_selection_gradients$p < 0.001, "***", "")))))
+```
+
+```{r}
+data_knivsasen_2022_selection_gradients <- left_join(data_knivsasen_2022_selection_gradients,
+                                                     data_knivsasen_2022_summary_traits,
+                                                     by = c("Trait" = "Trait"))
+```
+
+```{r}
+data_knivsasen_2022_selection_gradients <- data_knivsasen_2022_selection_gradients %>% 
+  mutate(Mean_Selection_Gradient = round(Estimate * Trait_Mean, digits = 4)) %>% 
+  mutate(Mean_SE_Selection_Gradient = round(SE_Model * Trait_Mean, digits = 4)) %>% 
+  mutate(Treatment = "Open_Control") %>% 
+  mutate(Population = "Knivsasen_2022")
+```
+
+```{r}
+saveRDS(data_knivsasen_2022_selection_gradients, 
+        file = paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2022.rds")))
+```

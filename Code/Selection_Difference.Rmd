@@ -1,0 +1,153 @@
+---
+title: "Absolute Value of the Difference in the Estimates of Linear Phenotypic Selection "
+---
+
+```{r include=FALSE}
+library(readr)
+library(dplyr)
+library(readr)
+library(tidyr)
+```
+
+# Load Data: Mean-Standardized Phenotypic Selection Gradients
+
+```{r}
+data_selection_gradients_knivsasen_2021 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2021.rds")))
+
+data_selection_gradients_knivsasen_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2022.rds")))
+  
+data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Veberod_2022.rds")))
+```
+
+# Absolute Value of Difference in Mean-Standardized Phenotypic Selection Gradients
+
+## Knivsåsen 2021 vs. Knivsåsen 2022
+
+```{r}
+data_selection_gradients_temporal <- rbind(data_selection_gradients_knivsasen_2021, data_selection_gradients_knivsasen_2022)
+```
+
+```{r}
+data_selection_gradients_difference_temporal <- data_selection_gradients_temporal %>% 
+  pivot_wider(id_cols = c(Trait, Method),
+              names_from = Population,
+              values_from = c("Mean_Selection_Gradient", "Mean_SE_Selection_Gradient"),
+              names_sep = "_")
+```
+
+```{r warning=FALSE}
+data_selection_gradients_difference_temporal <- data_selection_gradients_difference_temporal %>% 
+  rowwise() %>% 
+  mutate(Difference = abs(Mean_Selection_Gradient_Knivsasen_2021 - Mean_Selection_Gradient_Knivsasen_2022)) %>% 
+  mutate(SE = sqrt((Mean_SE_Selection_Gradient_Knivsasen_2021^2) + (Mean_SE_Selection_Gradient_Knivsasen_2022^2))) %>% 
+  mutate(Difference_Squared = Difference^2) %>%
+  mutate(SE_Squared = (Mean_SE_Selection_Gradient_Knivsasen_2021^2) + (Mean_SE_Selection_Gradient_Knivsasen_2022^2)) %>% 
+  mutate(Difference_Corrected = sqrt(Difference_Squared - SE_Squared))
+```
+
+```{r}
+data_selection_gradients_difference_temporal <- data_selection_gradients_difference_temporal %>% 
+  mutate(Comparison = "KN_21_KN_22") %>% 
+  mutate(Pollinator_Divergence = "Low") %>% 
+  select(Trait, Method, Difference, SE, Difference_Corrected, Comparison, Pollinator_Divergence)
+```
+
+## Knivsåsen 2022 vs. Veberöd 2022 
+
+```{r}
+data_selection_gradients_spatial <- rbind(data_selection_gradients_knivsasen_2022, data_selection_gradients_veberod_2022)
+```
+
+```{r}
+data_selection_gradients_difference_spatial <- data_selection_gradients_spatial %>% 
+  filter(Treatment == "Open_Control") %>% 
+  pivot_wider(id_cols = c(Trait, Method),
+              names_from = Population,
+              values_from = c("Mean_Selection_Gradient", "Mean_SE_Selection_Gradient"),
+              names_sep = "_")
+```
+
+```{r warning=FALSE}
+data_selection_gradients_difference_spatial <- data_selection_gradients_difference_spatial %>% 
+  rowwise() %>% 
+  mutate(Difference = abs(Mean_Selection_Gradient_Knivsasen_2022 - Mean_Selection_Gradient_Veberod_2022)) %>% 
+  mutate(SE = sqrt((Mean_SE_Selection_Gradient_Knivsasen_2022^2) + (Mean_SE_Selection_Gradient_Veberod_2022^2))) %>% 
+  mutate(Difference_Squared = Difference^2) %>%
+  mutate(SE_Squared = (Mean_SE_Selection_Gradient_Knivsasen_2022^2) + (Mean_SE_Selection_Gradient_Veberod_2022^2)) %>% 
+  mutate(Difference_Corrected = sqrt(Difference_Squared - SE_Squared))
+```
+
+```{r}
+data_selection_gradients_difference_spatial <- data_selection_gradients_difference_spatial %>% 
+  mutate(Comparison = "KN_22_VB_22") %>% 
+  mutate(Pollinator_Divergence = "Mid") %>% 
+  select(Trait, Method, Difference, SE, Difference_Corrected, Comparison, Pollinator_Divergence)
+```
+
+## Exclusion of Diurnal Pollinators (DE) vs. Exclusion of Nocturnal Pollinators (NE)
+
+```{r}
+data_selection_gradients_difference_DE_NE <- pivot_wider(data_selection_gradients_veberod_2022 %>% 
+                                                           filter(Treatment %in% c("Day_Caged", "Night_Caged")),
+                                                         id_cols = c(Trait, Method),
+                                                         names_from = Treatment,
+                                                         values_from = c("Mean_Selection_Gradient", "Mean_SE_Selection_Gradient"),
+                                                         names_sep = "_")
+```
+
+```{r warning=FALSE}
+data_selection_gradients_difference_DE_NE <- data_selection_gradients_difference_DE_NE %>% 
+  rowwise() %>% 
+  mutate(Difference = abs(Mean_Selection_Gradient_Day_Caged - Mean_Selection_Gradient_Night_Caged)) %>% 
+  mutate(SE = sqrt((Mean_SE_Selection_Gradient_Day_Caged^2) + (Mean_SE_Selection_Gradient_Night_Caged^2))) %>% 
+  mutate(Difference_Squared = Difference^2) %>%
+  mutate(SE_Squared = (Mean_SE_Selection_Gradient_Day_Caged^2) + (Mean_SE_Selection_Gradient_Night_Caged^2)) %>% 
+  mutate(Difference_Corrected = sqrt(Difference_Squared - SE_Squared))
+```
+
+```{r}
+data_selection_gradients_difference_DE_NE <- data_selection_gradients_difference_DE_NE %>% 
+  mutate(Comparison = "Day_Exclusion_Night_Exclusion") %>% 
+  mutate(Pollinator_Divergence = "High") %>% 
+  select(Trait, Method, Difference, Difference_Corrected, SE, Comparison, Pollinator_Divergence)
+```
+
+# Merge Data: Absolute Value of Difference in Mean-Standardized Phenotypic Selection Gradients
+
+```{r}
+data_selection_gradients_difference <- bind_rows(data_selection_gradients_difference_temporal,
+                                                 data_selection_gradients_difference_spatial,
+                                                 data_selection_gradients_difference_DE_NE)
+```
+
+```{r}
+saveRDS(data_selection_gradients_difference, file = paste0(here::here("GitHub/Data/Data_Selection_Gradients_Difference.rds")))
+```
+
+## No Exclusion of Pollinators (NO) vs. Complete Exclusion of Pollinators (CE)
+
+```{r}
+data_selection_gradients_difference_NO_CE <- pivot_wider(data_selection_gradients_veberod_2022 %>% 
+                                                           filter(Treatment %in% c("Open_Control", "Always_Caged")),
+                                                         id_cols = c(Trait, Method),
+                                                         names_from = Treatment,
+                                                         values_from = c("Mean_Selection_Gradient", "Mean_SE_Selection_Gradient"),
+                                                         names_sep = "_")
+```
+
+```{r warning=FALSE}
+data_selection_gradients_difference_NO_CE <- data_selection_gradients_difference_NO_CE %>% 
+  rowwise() %>% 
+  mutate(Difference = abs(Mean_Selection_Gradient_Open_Control - Mean_Selection_Gradient_Always_Caged)) %>% 
+  mutate(SE = sqrt((Mean_SE_Selection_Gradient_Open_Control^2) + (Mean_SE_Selection_Gradient_Always_Caged^2))) %>% 
+  mutate(Difference_Squared = Difference^2) %>%
+  mutate(SE_Squared = (Mean_SE_Selection_Gradient_Open_Control^2) + (Mean_SE_Selection_Gradient_Always_Caged^2)) %>% 
+  mutate(Difference_Corrected = sqrt(Difference_Squared - SE_Squared))
+```
+
+```{r}
+data_selection_gradients_difference_NO_CE <- data_selection_gradients_difference_NO_CE %>% 
+  mutate(Comparison = "No_Exclusion_Complete_Exclusion") %>% 
+  mutate(Pollinator_Divergence = "High") %>% 
+  select(Trait, Method, Difference, Difference_Corrected, SE, Comparison, Pollinator_Divergence)
+```

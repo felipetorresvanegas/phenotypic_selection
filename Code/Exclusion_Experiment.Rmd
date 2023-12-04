@@ -1,0 +1,204 @@
+---
+title: "Temporal Pollinator Exclusion Experiment"
+---
+
+```{r include=FALSE}
+library(dplyr)
+library(readr)
+library(readxl)
+library(emmeans)
+library(nlme)
+```
+
+# Load Data: Floral Traits and Plant Reproductive Success
+
+## Veberöd 2022
+
+```{r}
+data_phenotypes_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Veberod_2022.rds")))
+```
+
+```{r}
+data_phenotypes_veberod_2022 <- data_phenotypes_veberod_2022 %>% 
+  filter(Block != "NA")
+```
+
+# Compare Floral Traits and Plant Reproductive Success Across Experimental Treatments
+
+```{r}
+data_veberod_2022_compare_treatments_floral_traits <- list()
+
+for (response_vars in c("Stem_Height", "Stickidium", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Total_Flowers")) {
+
+  anova_model <- lme(fixed = as.formula(paste0(response_vars, " ~ Treatment")),
+                     random = ~ 1 | Plant_ID,
+                     na.action = na.omit,
+                     data = data_phenotypes_veberod_2022)
+  
+  anova_result <- anova(anova_model)
+  
+  anova_post_hoc <- pairs(emmeans(anova_model, ~ Treatment), adjust = "bonferroni")
+  
+  data_veberod_2022_compare_treatments_floral_traits[[response_vars]] <- list(anova_result, anova_post_hoc)
+}
+```
+
+```{r}
+data_veberod_2022_compare_treatments_plant_reproduction <- list()
+
+for (response_vars in c("Total_Fruits", "Mean_Seeds_Weight", "Fruit_Yield_Total_Fruits")) {
+
+  anova_model <- lme(fixed = as.formula(paste0(response_vars, " ~ Treatment")),
+                     random = ~ 1 | Plant_ID,
+                     na.action = na.omit,
+                     data = data_phenotypes_veberod_2022)
+  
+  anova_result <- anova(anova_model)
+  
+  anova_post_hoc <- pairs(emmeans(anova_model, ~ Treatment), adjust = "bonferroni")
+  
+  data_veberod_2022_compare_treatments_plant_reproduction[[response_vars]] <- list(anova_result, anova_post_hoc)
+}
+```
+
+# Compare Phenotypic Selection on Floral Traits Across Experimental Treatments
+
+```{r}
+data_phenotypes_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Veberod_2022.rds")))
+```
+
+## No Exclusion of Pollinators (NO) vs. Complete Exclusion of Pollinators (CE)
+
+```{r}
+data_veberod_2022_open_closed_ancova <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                           Stem_Height_Mean_Centred +
+                                                           Corolla_Diameter_Mean_Centred +
+                                                           Tube_Width_Mean_Centred +
+                                                           Tube_Length_Mean_Centred +
+                                                           NSD_Mean_Centred +
+                                                           Stickidium_Mean_Centred +
+                                                           Total_Flowers_Mean_Centred +
+                                                           Treatment +
+                                                           Stem_Height_Mean_Centred:Treatment +
+                                                           Corolla_Diameter_Mean_Centred:Treatment +
+                                                           Tube_Width_Mean_Centred:Treatment +
+                                                           Tube_Length_Mean_Centred:Treatment +
+                                                           NSD_Mean_Centred:Treatment +
+                                                           Stickidium_Mean_Centred:Treatment +
+                                                           Total_Flowers_Mean_Centred:Treatment,
+                                                         random = ~ 1 | Plant_ID,
+                                                         na.action = na.omit,
+                                                         data = data_phenotypes_veberod_2022 %>% 
+                                                           filter(Treatment %in% c("Open_Control", "Always_Caged")))
+```
+
+```{r}
+data_veberod_2022_open_closed <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                           Stem_Height_Mean_Centred +
+                                                           Corolla_Diameter_Mean_Centred +
+                                                           Tube_Width_Mean_Centred +
+                                                           Tube_Length_Mean_Centred +
+                                                           NSD_Mean_Centred +
+                                                           Stickidium_Mean_Centred +
+                                                           Total_Flowers_Mean_Centred,
+                                                         random = ~ 1 | Plant_ID,
+                                                         na.action = na.omit,
+                                                         data = data_phenotypes_veberod_2022 %>% 
+                                                           filter(Treatment %in% c("Open_Control", "Always_Caged")))
+```
+
+```{r warning=FALSE}
+test_variation_open_closed <- compare_performance(data_veberod_2022_open_closed_ancova, data_veberod_2022_open_closed)
+```
+
+## Exclusion of Diurnal Pollinators (DE) vs. Exclusion of Nocturnal Pollinators (NE)
+
+```{r}
+data_veberod_2022_day_night_ancova <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                           Stem_Height_Mean_Centred +
+                                                           Corolla_Diameter_Mean_Centred +
+                                                           Tube_Width_Mean_Centred +
+                                                           Tube_Length_Mean_Centred +
+                                                           NSD_Mean_Centred +
+                                                           Stickidium_Mean_Centred +
+                                                           Total_Flowers_Mean_Centred +
+                                                           Treatment +
+                                                           Stem_Height_Mean_Centred:Treatment +
+                                                           Corolla_Diameter_Mean_Centred:Treatment +
+                                                           Tube_Width_Mean_Centred:Treatment +
+                                                           Tube_Length_Mean_Centred:Treatment +
+                                                           NSD_Mean_Centred:Treatment +
+                                                           Stickidium_Mean_Centred:Treatment +
+                                                           Total_Flowers_Mean_Centred:Treatment,
+                                                         random = ~ 1 | Plant_ID,
+                                                         na.action = na.omit,
+                                                         data = data_phenotypes_veberod_2022 %>% 
+                                                           filter(Treatment %in% c("Day_Caged", "Night_Caged")))
+```
+
+```{r}
+data_veberod_2022_day_night <- nlme::lme(Relative_Fruit_Yield_Total_Fruits ~
+                                                           Stem_Height_Mean_Centred +
+                                                           Corolla_Diameter_Mean_Centred +
+                                                           Tube_Width_Mean_Centred +
+                                                           Tube_Length_Mean_Centred +
+                                                           NSD_Mean_Centred +
+                                                           Stickidium_Mean_Centred +
+                                                           Total_Flowers_Mean_Centred,
+                                                         random = ~ 1 | Plant_ID,
+                                                         na.action = na.omit,
+                                                         data = data_phenotypes_veberod_2022 %>% 
+                                                           filter(Treatment %in% c("Day_Caged", "Night_Caged")))
+```
+
+```{r warning=FALSE}
+test_variation_day_night <- compare_performance(data_veberod_2022_day_night_ancova, data_veberod_2022_day_night)
+```
+
+# Load Data: Mean-Standardized Phenotypic Selection Gradients
+
+```{r}
+data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Veberod_2022.rds")))
+```
+
+# Mean Value and Error-Corrected Variance of the Mean-Standardized Phenotypic Selection Gradients
+
+## No Exclusion of Pollinators (NO) vs. Complete Exclusion of Pollinators (CE)
+
+```{r warning=FALSE}
+data_selection_gradients_veberod_2022_mean_variance_NO_CE <- data_selection_gradients_veberod_2022 %>% 
+  group_by(Trait) %>% 
+  filter(Treatment %in% c("Open_Control", "Always_Caged")) %>% 
+  summarise(Variance_Mean_Selection_Gradient = var(Mean_Selection_Gradient),
+            Mean_Mean_SE_Selection_Gradient = mean(Mean_SE_Selection_Gradient^2),
+            Difference = Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient,
+            Varriance_Corrected_Mean_Selection_Gradient = sqrt(Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient)) %>% 
+  mutate_if(is.numeric, round, digits = 4) %>% 
+  mutate(Comparison = "NO_CE")
+```
+
+## Exclusion of Diurnal Pollinators (DE) vs. Exclusion of Nocturnal Pollinators (NE)
+
+```{r warning=FALSE}
+data_selection_gradients_veberod_2022_mean_variance_DE_NE <- data_selection_gradients_veberod_2022 %>% 
+  group_by(Trait) %>% 
+  filter(Treatment %in% c("Day_Caged", "Night_Caged")) %>% 
+  summarise(Variance_Mean_Selection_Gradient = var(Mean_Selection_Gradient),
+            Mean_Mean_SE_Selection_Gradient = mean(Mean_SE_Selection_Gradient^2),
+            Difference = Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient,
+            Varriance_Corrected_Mean_Selection_Gradient = sqrt(Variance_Mean_Selection_Gradient - Mean_Mean_SE_Selection_Gradient)) %>% 
+  mutate_if(is.numeric, round, digits = 4) %>% 
+  mutate(Comparison = "DE_NE")
+```
+
+## Merge Mean Value and Error-Corrected Variance of the Mean-Standardized Phenotypic Selection Gradients
+
+```{r}
+data_selection_gradients_mean_variance_experiment <- rbind(data_selection_gradients_veberod_2022_mean_variance_NO_CE,
+                                                           data_selection_gradients_veberod_2022_mean_variance_DE_NE)
+```
+
+```{r}
+saveRDS(data_selection_gradients_mean_variance_experiment, 
+        file = paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected_Experiment.rds")))
+```
