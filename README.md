@@ -1,1 +1,5 @@
+This README.md file contains a general description of the DATA and R CODE implemented in the manuscript: Divergent phenotypic selection on floral traits is related to divergent local pollinator assemblages in a pollination-generalized plant.
 
+Data: This folder contains two folders: Raw_Data and RDS_Objects. The Raw_Data folder contains separate spreadsheets with all the flower and inflorescence traits recorded at Knivsåsen and Veberöds Ljung in 2021 and 2022. See metadata spreadsheet for a detailed description of the data recorded. The RDS_Objects folder contains several .rds files generated throughout the analysis.
+
+Code: This folder contains all the R code files (.Rmd) implemented in the analysis. Separate .Rmd files are provided for the estimation of selection gradients at Knivsåsen and Veberöds Ljung in 2021 and 2022, as well as for the estimation of spatiotemporal variation in phenotypic selection and the difference in phenotypic selection for the categorical levels of divergence in the local pollinator assemblages. This folder also contains R code necessary to produce the main figures in the manuscript.
