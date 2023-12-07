@@ -12,7 +12,7 @@ library(reshape2)
 # Load Data: Knivsåsen 2021 
 
 ```{r}
-data_knivsasen_2021 <- readxl::read_excel(paste0(here::here("GitHub/Data/Selection_2022_15-02-23.xlsx")), sheet = "Knivsasen_2021")
+data_knivsasen_2021 <- readxl::read_excel(paste0(here::here("Data/Raw_Data/Selection_2022_15-02-23.xlsx")), sheet = "Knivsasen_2021")
 ```
 
 ```{r}
@@ -217,7 +217,7 @@ data_knivsasen_2021_selection_gradients <- data_knivsasen_2021_selection_gradien
 # Load Data: Knivsåsen 2022 
 
 ```{r}
-data_knivsasen_2022 <- readxl::read_excel(paste0(here::here("GitHub/Data/Selection_2022_15-02-23.xlsx")), sheet = "Knivsasen_2022")
+data_knivsasen_2022 <- readxl::read_excel(paste0(here::here("Data/Raw_Data/Selection_2022_15-02-23.xlsx")), sheet = "Knivsasen_2022")
 ```
 
 ```{r}
@@ -425,7 +425,7 @@ data_knivsasen_2022_selection_gradients <- data_knivsasen_2022_selection_gradien
 # Load Data: Veberöd 2022 
 
 ```{r}
-data_veberod_2022 <- readxl::read_excel(paste0(here::here("GitHub/Data/Selection_2022_15-02-23.xlsx")), sheet = "Veberod_2022")
+data_veberod_2022 <- readxl::read_excel(paste0(here::here("Data/Raw_Data/Selection_2022_15-02-23.xlsx")), sheet = "Veberod_2022")
 ```
 
 ```{r}
@@ -748,5 +748,5 @@ data_selection_gradients <- data_selection_gradients %>%
 ```
 
 ```{r}
-saveRDS(data_selection_gradients, file = paste0(here::here("GitHub/Data/Selection_Gradients_Plant_Level.rds")))
+saveRDS(data_selection_gradients, file = paste0(here::here("Data/RDS_Objects/Selection_Gradients_Plant_Level.rds")))
 ```

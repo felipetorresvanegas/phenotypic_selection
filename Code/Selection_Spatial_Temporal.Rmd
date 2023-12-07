@@ -18,7 +18,7 @@ library(performance)
 ## Knivsåsen 2021
 
 ```{r}
-data_phenotypes_knivsasen_2021 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Knivsasen_2021.rds")))
+data_phenotypes_knivsasen_2021 <- read_rds(paste0(here::here("Data/RDS_Objects/Data_Phenotypes_Knivsasen_2021.rds")))
 ```
 
 ```{r}
@@ -30,7 +30,7 @@ data_phenotypes_knivsasen_2021 <- data_phenotypes_knivsasen_2021 %>%
 ## Knivsåsen 2022
 
 ```{r}
-data_phenotypes_knivsasen_2022 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Knivsasen_2022.rds")))
+data_phenotypes_knivsasen_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Data_Phenotypes_Knivsasen_2022.rds")))
 ```
 
 ```{r}
@@ -42,7 +42,7 @@ data_phenotypes_knivsasen_2022 <- data_phenotypes_knivsasen_2022 %>%
 ## Veberöd 2022
 
 ```{r}
-data_phenotypes_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Veberod_2022.rds")))
+data_phenotypes_veberod_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Data_Phenotypes_Veberod_2022.rds")))
 ```
 
 ```{r}
@@ -246,11 +246,11 @@ test_spatiotemporal_variation <- compare_performance(data_selection_gradients_K2
 # Load Data: Mean-Standardized Phenotypic Selection Gradients
 
 ```{r}
-data_selection_gradients_knivsasen_2021 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2021.rds")))
+data_selection_gradients_knivsasen_2021 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Knivsasen_2021.rds")))
 
-data_selection_gradients_knivsasen_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2022.rds")))
+data_selection_gradients_knivsasen_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Knivsasen_2022.rds")))
   
-data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Veberod_2022.rds")))
+data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Veberod_2022.rds")))
 ```
 
 ```{r}
@@ -276,7 +276,7 @@ data_selection_gradients_mean_variance <- data_selection_gradients %>%
 
 ```{r}
 saveRDS(data_selection_gradients_mean_variance, 
-        file = paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected_Spatio_Temporal.rds")))
+        file = paste0(here::here("Data/RDS_Objects/Selection_Gradients_Error_Corrected_Spatio_Temporal.rds")))
 ```
 
 ## Knivsåsen 2021 vs. Knivsåsen 2022
@@ -334,5 +334,5 @@ data_selection_gradients_mean_variance_K21_K22_V22 <- rbind(data_selection_gradi
 
 ```{r}
 saveRDS(data_selection_gradients_mean_variance_K21_K22_V22, 
-        file = paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected.rds")))
+        file = paste0(here::here("Data/RDS_Objects/Selection_Gradients_Error_Corrected.rds")))
 ```

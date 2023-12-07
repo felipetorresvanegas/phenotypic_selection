@@ -15,7 +15,7 @@ library(performance)
 # Load Data: Veberöd 2022
 
 ```{r}
-data_veberod_2022 <- readxl::read_excel(paste0(here::here("GitHub/Data/Selection_2022_15-02-23.xlsx")), sheet = "Veberod_2022")
+data_veberod_2022 <- readxl::read_excel(paste0(here::here("Data/Raw_Data/Selection_2022_15-02-23.xlsx")), sheet = "Veberod_2022")
 ```
 
 ```{r}
@@ -95,7 +95,7 @@ data_veberod_2022 <- data_veberod_2022 %>%
 
 ```{r}
 saveRDS(data_veberod_2022, 
-        file = paste0(here::here("GitHub/Data/Data_Phenotypes_Veberod_2022.rds")))
+        file = paste0(here::here("Data/RDS_Objects/Data_Phenotypes_Veberod_2022.rds")))
 ```
 
 # Linear Mixed-Effects Models
@@ -368,5 +368,5 @@ data_veberod_2022_selection_gradients <- data_veberod_2022_selection_gradients %
 
 ```{r}
 saveRDS(data_veberod_2022_selection_gradients, 
-        file = paste0(here::here("GitHub/Data/Selection_Gradients_Veberod_2022.rds")))
+        file = paste0(here::here("Data/RDS_Objects/Selection_Gradients_Veberod_2022.rds")))
 ```

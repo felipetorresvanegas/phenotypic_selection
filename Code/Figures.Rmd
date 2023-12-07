@@ -16,11 +16,11 @@ library(stringr)
 # Load Data: Mean-Standardized Phenotypic Selection Gradients
 
 ```{r}
-data_selection_gradients_knivsasen_2021 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2021.rds")))
+data_selection_gradients_knivsasen_2021 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Knivsasen_2021.rds")))
 
-data_selection_gradients_knivsasen_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2022.rds")))
+data_selection_gradients_knivsasen_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Knivsasen_2022.rds")))
   
-data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Veberod_2022.rds")))
+data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Veberod_2022.rds")))
 ```
 
 ```{r}
@@ -50,7 +50,7 @@ compare_observational <-data.frame(Trait = c("Stickidium", "Total_Flowers", "Sti
 ```
 
 ```{r}
-tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Observational.tiff")), units = "in", width = 10.5, height = 5, res = 300)
+tiff(paste0(here::here("Selection_Gradients_Observational.tiff")), units = "in", width = 10.5, height = 5, res = 300)
 data_selection_gradients %>% 
   filter(Treatment %in% c("Open_Control")) %>% 
   mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
@@ -94,59 +94,6 @@ data_selection_gradients %>%
   scale_x_discrete(labels = c(expression(paste("K"[2021])),
                               expression(paste("K"[2022])),
                               expression(paste("V"[2022]))))
-```
-
-```{r}
-tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Observational_SCAPE.tiff")), units = "in", width = 11.5, height = 7, res = 300)
-data_selection_gradients %>% 
-  filter(Treatment %in% c("Open_Control")) %>% 
-  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Stickidium"))) %>% 
-  ggbarplot(x = "Population",
-            y = "Mean_Selection_Gradient",
-            fill = "Population",
-            alpha = 0.75,
-            facet.by = "Trait",
-            nrow = 1,
-            color = "black") +
-  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.265, Trait = "Stem_Height"), size = 5, color="red") +
-  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.920, Trait = "Total_Flowers"), size = 5, color="red") +
-  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.396, Trait = "Corolla_Diameter"), size = 5, color="red") +
-  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.135, Trait = "Tube_Width"), size = 5, color="red") +
-  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.087, Trait = "Tube_Length"), size = 5, color="red") +
-  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.128, Trait = "NSD"), size = 5, color="red") +
-  geom_point(data = data.frame(Population = 2, Mean_Selection_Gradient = 0.105, Trait = "Stickidium"), size = 5, color="red") +
-  geom_errorbar(aes(ymin = Mean_Selection_Gradient - Mean_SE_Selection_Gradient,
-                    ymax = Mean_Selection_Gradient + Mean_SE_Selection_Gradient),
-                position = position_dodge(), width = 0.1) +
-  theme_bw(base_size = 15) +
-  xlab("") +
-  ylab(expression(paste("Mean-Standardized Selection Gradient (", beta, ")"))) +
-  geom_hline(yintercept = 0, linetype = "solid") +
-  facet_grid(cols = vars(Trait = factor(Trait, levels = c("Stem_Height", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Stickidium"))),
-             labeller = labeller(Trait = as_labeller(labels_columns))) +
-  theme(legend.position = "top",
-        legend.justification = "left",
-        legend.title = element_blank(),
-        axis.text.x = element_text(size = 15, angle = 90),
-        axis.text.y = element_text(size = 15),
-        panel.grid.minor = element_blank()) +
-  scale_fill_grey(start = 0.95, end = 0.05,
-                  labels = c(expression(paste("Knivsåsen 2021 (K"[2021], ")")),
-                             expression(paste("Knivsåsen 2022 (K"[2022], ")")),
-                             expression(paste("Veberöds Ljung 2022 (V"[2022], ")")))) +
-  scale_y_continuous(limits = c(-1.05, 1.5), breaks = seq(-1, 1.5, by = 0.5)) +
-  geom_text(mapping = aes(x = Population, y = Mean_Selection_Gradient / 1000, label = Significant),
-            position = position_dodgenudge(y = -0.1, x = 0, direction = "split", width = 1),
-            size = 5) +
-  scale_x_discrete(labels = c(expression(paste("K"[2021])),
-                              expression(paste("K"[2022])),
-                              expression(paste("V"[2022])))) +
-  labs(subtitle = expression(paste("(|", beta, "|)")),
-       caption = expression(atop("* p < 0.05", "\u2020 ≈ 0.05"))) +
-  theme(plot.subtitle = element_text(size = 15, hjust = 0.05),
-        plot.title.position = "panel",
-        plot.caption.position = "plot",
-        plot.caption = element_text(size = 15, hjust = 0.06))
 ```
 
 # Graph: Mean-Standardized Phenotypic Selection Gradients (Temporal Pollinator Exclussion Experiment)
@@ -253,7 +200,7 @@ data_selection_gradients %>%
 ## Assemble Graph for Temporal Pollinator Exclusion
 
 ```{r}
-tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Experiment.tiff")), units = "in", width = 10.5, height = 10.5, res = 300)
+tiff(paste0(here::here("Selection_Gradients_Experiment.tiff")), units = "in", width = 10.5, height = 10.5, res = 300)
 ggarrange(graph_selection_gradients_CE_NO, graph_selection_gradients_DE_NE,
           labels = c("(A)", "(B)"),
           ncol = 1,
@@ -263,7 +210,7 @@ ggarrange(graph_selection_gradients_CE_NO, graph_selection_gradients_DE_NE,
 # Divergence in Phenotypic Selecion on Floral Traits
 
 ```{r}
-data_selection_gradients_difference <- read_rds(paste0(here::here("GitHub/Data/Data_Selection_Gradients_Difference.rds")))
+data_selection_gradients_difference <- read_rds(paste0(here::here("Data/RDS_Objects/Data_Selection_Gradients_Difference.rds")))
 ```
 
 ```{r}
@@ -284,7 +231,7 @@ data_selection_gradients_difference <- data_selection_gradients_difference %>%
 ```
 
 ```{r}
-tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Difference_Corrected.tiff")), units = "in", width = 10.5, height = 5, res = 300)
+tiff(paste0(here::here("Selection_Gradients_Difference_Corrected.tiff")), units = "in", width = 10.5, height = 5, res = 300)
 data_selection_gradients_difference %>% 
   mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
   ggplot(aes(x = Pollinator_Divergence, y = Difference_Value)) +
@@ -319,11 +266,11 @@ data_selection_gradients_difference %>%
 # Load Data: Mean-Standardized Phenotypic Selection Gradients at the Plant Level
 
 ```{r}
-data_selection_gradients_plant_level <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Plant_Level.rds")))
+data_selection_gradients_plant_level <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Plant_Level.rds")))
 ```
 
 ```{r}
-tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Observational_Plant_Level.tiff")), units = "in", width = 10.5, height = 5, res = 300)
+tiff(paste0(here::here("Selection_Gradients_Observational_Plant_Level.tiff")), units = "in", width = 10.5, height = 5, res = 300)
 data_selection_gradients_plant_level %>% 
   filter(Treatment == "Open_Control") %>% 
   mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
@@ -364,11 +311,11 @@ data_selection_gradients_plant_level %>%
 # Load Data: Mean Value and Error-Corrected Variance of the Mean-Standardized Phenotypic Selection Gradients
 
 ```{r}
-data_selection_gradients_mean_variance_K21_K22_V22 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected.rds")))
+data_selection_gradients_mean_variance_K21_K22_V22 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Error_Corrected.rds")))
 ```
 
 ```{r}
-data_selection_gradients_mean_variance_experiment <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected_Experiment.rds")))
+data_selection_gradients_mean_variance_experiment <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Error_Corrected_Experiment.rds")))
 ```
 
 ```{r}
@@ -440,7 +387,7 @@ data_selection_gradients_difference_mean_variance <- data_selection_gradients_di
 ```
 
 ```{r}
-tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Difference_Variance.tiff")), units = "in", width = 10.5, height = 5, res = 300)
+tiff(paste0(here::here("Selection_Gradients_Difference_Variance.tiff")), units = "in", width = 10.5, height = 5, res = 300)
 data_selection_gradients_difference_mean_variance %>% 
   filter(Comparison %in% c("Temporal", "Spatial", "DE_NE")) %>% 
   mutate(Trait = factor(Trait, levels = c("Stem_Height", "Stickidium", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD"))) %>% 
@@ -475,32 +422,7 @@ data_selection_gradients_difference_mean_variance %>%
 ```
 
 ```{r}
-tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Difference_Variance_SCAPE.tiff")), units = "in", width = 11.5, height = 7, res = 300)
-data_selection_gradients_difference_mean_variance %>% 
-  filter(Comparison %in% c("Temporal", "Spatial", "DE_NE")) %>% 
-  mutate(Trait = factor(Trait, levels = c("Stem_Height", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Stickidium"))) %>% 
-  filter(Type == "Error_Corrected_Variance") %>% 
-  ggplot(aes(x = Comparison, y = Value)) +
-  geom_hline(yintercept = 0, linetype = "solid") +
-  geom_line(aes(group = Type, color = Type), linewidth = 2, color = "black") +
-  geom_point(data = . %>% filter(Type == "Error_Corrected_Variance"), aes(color = Type, group = Type), size = 5, color = "black") +
-  theme_bw(base_size = 15) +
-  xlab("") +
-  ylab(expression(atop("Error-Corrected Standard Deviation of", paste("Mean-Standardized Selection Gradient (", sigma[beta]^c, ")")))) +
-  facet_wrap(~ Trait, nrow = 1, labeller = labeller(Trait = as_labeller(labels_columns))) +
-  theme(legend.position = "none",
-        legend.title = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 15),
-        axis.text.y = element_text(size = 15)) +
-  scale_x_discrete(limits = c("Temporal", "Spatial", "DE_NE"),
-                   labels = c("Temporal", "Spatial", "Diurnal vs. Nocturnal")) +
-  scale_y_continuous(limits = c(0, 1),
-                     breaks = seq(0, 1, by = 0.25))
-```
-
-```{r}
-data_selection_gradients_mean_variance_spatio_temporal <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected_Spatio_Temporal.rds")))
+data_selection_gradients_mean_variance_spatio_temporal <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Error_Corrected_Spatio_Temporal.rds")))
 ```
 
 ```{r}
@@ -509,7 +431,7 @@ data_selection_gradients_mean_variance_spatio_temporal <- data_selection_gradien
 ```
 
 ```{r}
-tiff(paste0(here::here("GitHub/Figures/Selection_Gradients_Difference_Variance_Spatio_Temporal.tiff")), units = "in", width = 11.5, height = 7, res = 300)
+tiff(paste0(here::here("Selection_Gradients_Difference_Variance_Spatio_Temporal.tiff")), units = "in", width = 11.5, height = 7, res = 300)
 data_selection_gradients_mean_variance_spatio_temporal %>% 
   mutate(Trait = factor(Trait, levels = c("Stem_Height", "Total_Flowers", "Corolla_Diameter", "Tube_Width", "Tube_Length", "NSD", "Stickidium"))) %>% 
   ggplot(aes(x = Trait, y = Varriance_Corrected_Mean_Selection_Gradient)) +

@@ -12,11 +12,11 @@ library(tidyr)
 # Load Data: Mean-Standardized Phenotypic Selection Gradients
 
 ```{r}
-data_selection_gradients_knivsasen_2021 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2021.rds")))
+data_selection_gradients_knivsasen_2021 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Knivsasen_2021.rds")))
 
-data_selection_gradients_knivsasen_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2022.rds")))
+data_selection_gradients_knivsasen_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Knivsasen_2022.rds")))
   
-data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Veberod_2022.rds")))
+data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Veberod_2022.rds")))
 ```
 
 # Absolute Value of Difference in Mean-Standardized Phenotypic Selection Gradients
@@ -121,7 +121,7 @@ data_selection_gradients_difference <- bind_rows(data_selection_gradients_differ
 ```
 
 ```{r}
-saveRDS(data_selection_gradients_difference, file = paste0(here::here("GitHub/Data/Data_Selection_Gradients_Difference.rds")))
+saveRDS(data_selection_gradients_difference, file = paste0(here::here("Data/RDS_Objects/Data_Selection_Gradients_Difference.rds")))
 ```
 
 ## No Exclusion of Pollinators (NO) vs. Complete Exclusion of Pollinators (CE)

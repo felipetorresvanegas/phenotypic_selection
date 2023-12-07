@@ -15,7 +15,7 @@ library(performance)
 # Load Data: Knivsåsen 2021
 
 ```{r}
-data_knivsasen_2021 <- readxl::read_excel(paste0(here::here("GitHub/Data/Selection_2022_15-02-23.xlsx")), sheet = "Knivsasen_2021")
+data_knivsasen_2021 <- readxl::read_excel(paste0(here::here("Data/Raw_Data/Selection_2022_15-02-23.xlsx")), sheet = "Knivsasen_2021")
 ```
 
 ```{r}
@@ -80,7 +80,7 @@ data_knivsasen_2021 <- data_knivsasen_2021 %>%
 
 ```{r}
 saveRDS(data_knivsasen_2021, 
-        file = paste0(here::here("GitHub/Data/Data_Phenotypes_Knivsasen_2021.rds")))
+        file = paste0(here::here("Data/RDS_Objects/Data_Phenotypes_Knivsasen_2021.rds")))
 ```
 
 # Linear Mixed-Effects Models
@@ -266,5 +266,5 @@ data_knivsasen_2021_selection_gradients <- data_knivsasen_2021_selection_gradien
 
 ```{r}
 saveRDS(data_knivsasen_2021_selection_gradients, 
-        file = paste0(here::here("GitHub/Data/Selection_Gradients_Knivsasen_2021.rds")))
+        file = paste0(here::here("Data/RDS_Objects/Selection_Gradients_Knivsasen_2021.rds")))
 ```

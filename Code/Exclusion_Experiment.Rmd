@@ -15,7 +15,7 @@ library(nlme)
 ## Veberöd 2022
 
 ```{r}
-data_phenotypes_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Veberod_2022.rds")))
+data_phenotypes_veberod_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Data_Phenotypes_Veberod_2022.rds")))
 ```
 
 ```{r}
@@ -64,7 +64,7 @@ for (response_vars in c("Total_Fruits", "Mean_Seeds_Weight", "Fruit_Yield_Total_
 # Compare Phenotypic Selection on Floral Traits Across Experimental Treatments
 
 ```{r}
-data_phenotypes_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Data_Phenotypes_Veberod_2022.rds")))
+data_phenotypes_veberod_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Data_Phenotypes_Veberod_2022.rds")))
 ```
 
 ## No Exclusion of Pollinators (NO) vs. Complete Exclusion of Pollinators (CE)
@@ -158,7 +158,7 @@ test_variation_day_night <- compare_performance(data_veberod_2022_day_night_anco
 # Load Data: Mean-Standardized Phenotypic Selection Gradients
 
 ```{r}
-data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("GitHub/Data/Selection_Gradients_Veberod_2022.rds")))
+data_selection_gradients_veberod_2022 <- read_rds(paste0(here::here("Data/RDS_Objects/Selection_Gradients_Veberod_2022.rds")))
 ```
 
 # Mean Value and Error-Corrected Variance of the Mean-Standardized Phenotypic Selection Gradients
@@ -200,5 +200,5 @@ data_selection_gradients_mean_variance_experiment <- rbind(data_selection_gradie
 
 ```{r}
 saveRDS(data_selection_gradients_mean_variance_experiment, 
-        file = paste0(here::here("GitHub/Data/Selection_Gradients_Error_Corrected_Experiment.rds")))
+        file = paste0(here::here("Data/RDS_Objects/Selection_Gradients_Error_Corrected_Experiment.rds")))
 ```
